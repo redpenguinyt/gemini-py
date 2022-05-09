@@ -36,7 +36,6 @@ i = 0
 times_since_placed = 0
 while True:
 	i += 1
-	print(i)
 	water = Sprite((i%TERRAIN_WIDTH,0), image="░", collisions=True)
 	water_count += 1
 	been_to = []

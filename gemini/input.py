@@ -19,8 +19,8 @@ class Input:
 	def string_key(self, c: str | None) -> str:
 		key = str(repr(c))[1:-1] if c else None
 		if key == "\\x1b":
-			if self.wait_for_key_press() == "[":
-				key = f"{self.keys[self.wait_for_key_press()]}_arrow"
+			if self.get_key_press() == "[":
+				key = f"{self.keys[self.get_key_press()]}_arrow"
 		return key
 
 	def get_key_press(self, is_wait=True) -> str:

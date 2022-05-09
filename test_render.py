@@ -1,5 +1,4 @@
 from gemini import Scene, Entity, Sprite, txtcolours as tc, sleep
-import random
 
 test_image = """  ______
  /|_||_\`.__

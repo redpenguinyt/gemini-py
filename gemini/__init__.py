@@ -29,14 +29,14 @@ class Entity:
 			self._parent.children.remove(self)
 		self._parent = value
 
-	def __init__(self, pos: tuple, size: tuple, parent: 'Scene'=None, auto_render=False, layer=0, fill_char="█", colour="", collisions=False):
+	def __init__(self, pos: tuple, size: tuple, parent: 'Scene'=None, auto_render=False, layer=0, fill_char="█", colour="", collisions: list|bool=[]):
 		self.pos, self.size = pos, size
 		self.fill_char = fill_char
 		self.old_fill_char = self.fill_char
 		self.colour = colour
 		self.auto_render = auto_render
 		self.layer = layer
-		self.collisions = collisions
+		self.collisions = [-1] if collisions == True else [] if type(collisions) == bool else collisions
 
 		if not parent and main_scene.main_scene:
 			parent = main_scene.main_scene
@@ -49,7 +49,7 @@ class Entity:
 
 		When collisions are on, the entity will collide with anything that isnt the background"""
 		if collide == None:
-			collide = self.collisions
+			collide = len(self.collisions) > 0
 		if render == None:
 			render = self.auto_render
 
@@ -64,7 +64,7 @@ class Entity:
 			for _ in range(abs(x)):
 				colliding = False
 				for wall_y in range(self.size[1]):
-					if self.parent.is_entity_at((self.pos[0] + (self.size[0] if x > 0 else -1), self.pos[1] + wall_y)):
+					if self.parent.is_entity_at((self.pos[0] + (self.size[0] if x > 0 else -1), self.pos[1] + wall_y), layers=self.collisions):
 						colliding, has_collided = True, True
 				if colliding:
 					break
@@ -73,7 +73,7 @@ class Entity:
 			for _ in range(abs(y)):
 				colliding = False
 				for wall_x in range(self.size[0]):
-					if self.parent.is_entity_at((self.pos[0] + wall_x, self.pos[1] + (self.size[1] if y > 0 else -1))):
+					if self.parent.is_entity_at((self.pos[0] + wall_x, self.pos[1] + (self.size[1] if y > 0 else -1)), layers=self.collisions):
 						colliding, has_collided = True, True
 				if colliding:
 					break
@@ -108,7 +108,7 @@ class Sprite(Entity):
 	This makes it easy to put existing ascii art into whatever you're making, and animate it!
 	"""
 
-	def __init__(self, pos: tuple, image: str, transparent: bool=True, parent: 'Scene'=None, auto_render=False, layer=0, colour: str="", collisions=False):
+	def __init__(self, pos: tuple, image: str, transparent: bool=True, parent: 'Scene'=None, auto_render=False, layer=0, colour: str="", collisions: list=[]):
 		self.old_image = image
 		self.image = image
 		self.transparent = transparent
@@ -156,7 +156,7 @@ class Scene:
 		self.children.append(new_entity)
 		new_entity.parent = self
 
-	def render(self, is_display=True, layers: list=None):
+	def render(self, is_display=True, layers: list=None, _output=True):
 		"""This will print out all the entities that are part of the scene with their current settings. The character `¶` can be used as a whitespace in Sprites, as regular ` ` characters are considered transparent, unless the transparent parameter is disabled, in which case all whitespaces are rendered over the background.
 
 		When rendering an animation, make sure to use `time.sleep()` in between frames to set your fps. `time.sleep(0.1)` will mean a new fram every 0.1 seconds, aka 10 FPS
@@ -187,15 +187,16 @@ class Scene:
 
 		if is_display:
 			print(seperator+"\n".join(["".join(row) for row in display])+"\n")
-		return display
+		if _output:
+			return display
 
 	def get_background(self):
 		"""Return the background character with the """
 		return f"{self.bg_colour}{self.clear_char}{txtcolours.END if self.bg_colour != '' else ''}"
 
 	def is_entity_at(self, pos: tuple, layers: list=None):
-		"""Note: `is_same_layer` and `in_list` don't work, this function is a WIP"""
-		render = self.render(is_display=False, layers=layers)
+		"""Check for any object at a specific position, can be sorted by layers"""
+		render = self.render(is_display=False, layers=layers if -1 not in layers else None)
 		pos = correct_position(pos, self.size)
 		coordinate = render[pos[1]][pos[0]]
 		if coordinate != self.get_background():

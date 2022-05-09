@@ -3,7 +3,7 @@ from gemini import Scene, Entity, Sprite, Input, printd, sleep, txtcolours as tc
 
 scene = Scene((40, 15), is_main_scene=True)
 square = Entity((10,4),(2,1))
-player = Sprite((20,7),image="ඞ", colour=tc.RED, auto_render=True)
+player = Sprite((20,7),image="ඞ", colour=tc.RED, auto_render=True, collisions=True)
 
 
 while True:
