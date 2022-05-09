@@ -105,19 +105,25 @@ class Sprite(Entity):
 	░Hello there░
 	░░░░░░░░░░░░░
 
-	This makes it easy to put existing ascii art into whatever you're making, and animate it!
+	This makes it easy to put existing ascii art into whatever you're making, and move it around!
+
+	In the event that a single character takes up two spaces (e.g. ¯\_(ツ)_/¯), you can use the extra_characters parameter, with each index of the list corresponding to the line with the extra character. For instance with a sprite with the image `¯\_(ツ)_/¯`, you would set `extra_characters=[1]`
 	"""
 
-	def __init__(self, pos: tuple, image: str, transparent: bool=True, parent: 'Scene'=None, auto_render=False, layer=0, colour: str="", collisions: list=[]):
+	def __init__(self, pos: tuple, image: str, transparent: bool=True, parent: 'Scene'=None, auto_render=False, layer=0, colour: str="", collisions: list=[], extra_characters: list=[]):
 		self.old_image = image
 		self.image = image
 		self.transparent = transparent
+		self.extra_characters = extra_characters
 
 		size = (len(max(image.split("\n"))), image.count("\n") + 1)
 
 		super().__init__(pos, size, parent, auto_render, layer, "", colour, collisions)
 		del self.fill_char
 		del self.old_fill_char
+
+	def __str__(self):
+		return f"Scene(size={self.size},clear_char='{self.clear_char}',bg_colour='{self.bg_colour}',is_main_scene={self == main_scene.main_scene})"
 
 	def show(self):
 		self.image = self.old_image
@@ -163,17 +169,28 @@ class Scene:
 
 		If your scene is stuttering while animating, make sure you're only rendering the scene once per frame
 
-		if the `layers` parameter is set, only objects on those layers will be rendered"""
+		If the `layers` parameter is set, only objects on those layers will be rendered.
+		"""
 		seperator = "\n" * (os.get_terminal_size().lines - self.size[1]) if self.use_seperator else ""
 		display = [[self.get_background()] * self.size[0] for _ in range(self.size[1])]
 
 		entity_list = list(filter(lambda x: x.layer in layers, self.children)) if layers else self.children
 		for entity in sorted(entity_list, key=lambda x: x.layer, reverse=True):
-			for x in range(entity.size[0]):
+			extra_length = 0
+			if isinstance(entity, Sprite):
+				entity_image = entity.image.split("\n")
+				for i, n in enumerate(entity.extra_characters):
+					print(f"yooo: {i}, {n}")
+					entity_image[i] += "​"*n # Add zero width spaces
+				entity_image = '\n'.join(entity_image)
+				print(entity_image)
+				extra_length = max(entity.extra_characters)
+			for x in range(entity.size[0]+extra_length):
 				for y in range(entity.size[1]):
 					if isinstance(entity, Sprite):
 						try:
-							pixel = entity.image.split("\n")[y][x]
+							print(__import__('json').dumps(entity_image))
+							pixel = entity_image.split("\n")[y][x]
 						except:
 							pixel = " "
 						if pixel == " " and entity.transparent:
@@ -191,41 +208,16 @@ class Scene:
 			return display
 
 	def get_background(self):
-		"""Return the background character with the """
+		"""Return the background character with colours included"""
 		return f"{self.bg_colour}{self.clear_char}{txtcolours.END if self.bg_colour != '' else ''}"
 
-	def is_entity_at(self, pos: tuple, layers: list=None):
-		"""Check for any object at a specific position, can be sorted by layers"""
-		render = self.render(is_display=False, layers=layers if -1 not in layers else None)
+	def is_entity_at(self, pos: tuple, layers: list=[-1]):
+		"""Check for any object at a specific position, can be sorted by layers. `-1` in the layers list means to collide with all layers"""
+		render = self.render(is_display=False, layers=None if -1 in layers else layers)
 		pos = correct_position(pos, self.size)
 		coordinate = render[pos[1]][pos[0]]
 		if coordinate != self.get_background():
 			return True
 
-def example():
-	"""Run this to explore Gemini Engine
-	>>> import gemini
-	>>> gemini.example()"""
-
-	printd("Gemini Engine is a monospaced 2D ASCII-based rendering engine. Press space to see an example, and press ^C after that to continue the demo")
-	while True:
-		if Input().pressed_key == " ":
-			break
-
-	scene = Scene((30,10))
-	square = Entity((0,5),(1,1), parent=scene)
-	i = -1
-	while True:
-		scene.render()
-		square.move(1 if i%60<30 else -1, 0)
-		try:
-			sleep(.1)
-		except KeyboardInterrupt:
-			break
-		i += 1
-	printd("This is the piece of code that allowed the little square to go back and forth on the scene\n> from gemini import Entity, Scene, sleep\n> scene = Scene(width=30,height=10)\n> square = Entity(pos=(0,5),size=(2,1), parent=scene)\n> i = -1\n> while True:\n>   scene.render()\n>   square.move(1 if i%60<30 else -1, 0)\n>   sleep(.1)\n>   i += 1")
-	printd("Simple, right? Gemini uses a style similar to how old film projectors used to work, by printing a completely new image in the same place where the previous one was. If you scroll up, you'll be able to see all the frames you rendered!")
-	printd("Now get creative! It's time to see what you can make")
-
 if __name__ == "__main__":
-	example()
+	print("This is the module file, please use a provided example instead")
