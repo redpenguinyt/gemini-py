@@ -17,10 +17,9 @@ class Input:
 		self.pressed_key = self.get_key_press(False)
 
 	def string_key(self, c: str | None) -> str:
-		key = str(repr(c))[1:-1] if c else None
-		if key == "\\x1b":
-			if self.wait_for_key_press() == "[":
-				key = f"{self.keys[self.wait_for_key_press()]}_arrow"
+		key = repr(c)[1:-1] if c else None
+		if key == "\\x1b" and self.wait_for_key_press() == "[":
+			key = f"{self.keys[self.wait_for_key_press()]}_arrow"
 		return key
 
 	def get_key_press(self, is_wait=True) -> str:
@@ -39,8 +38,7 @@ class Input:
 			if is_wait:
 				while True:
 					try:
-						c = sys.stdin.read(1)
-						if c:
+						if c := sys.stdin.read(1):
 							return self.string_key(c)
 					except IOError: pass
 			else:

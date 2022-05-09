@@ -25,7 +25,7 @@ class Entity:
 
 	@parent.setter
 	def parent(self, value: 'Scene'):
-		if value == None:
+		if value is None:
 			self._parent.children.remove(self)
 		self._parent = value
 
@@ -48,9 +48,9 @@ class Entity:
 		"""Move the Entity within the scene. `+x` is right and `+y` is down. By enabling the Entity's auto_render property, calling this function will automatically render the scene that this Entity belongs to. If your scene is stuttering while animating, make sure you're only rendering the scene once per frame.
 
 		When collisions are on, the entity will collide with anything that isnt the background"""
-		if collide == None:
+		if collide is None:
 			collide = self.collisions
-		if render == None:
+		if render is None:
 			render = self.auto_render
 
 		has_collided = False
