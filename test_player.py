@@ -5,6 +5,7 @@ scene = Scene((40, 15), is_main_scene=True)
 square = Entity((10,4),(2,1))
 player = Sprite((20,7),image="ඞ", colour=tc.RED, auto_render=True, collisions=True)
 
+scene.render()
 
 while True:
 	input = Input().get_key_press() # Wait for next key press, then move player, then render

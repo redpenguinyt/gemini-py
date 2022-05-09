@@ -1,1 +1,2 @@
-gemini/__pychache__/
+__pycache__/
+*.py[cod]
