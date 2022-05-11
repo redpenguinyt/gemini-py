@@ -1,12 +1,11 @@
 import random, json
 from gemini import Scene, Sprite, Entity, sleep, Input
 
-IS_WAIT = False
+IS_WAIT = True
 CUSTOM_TERRAIN = []
-TERRAIN_WIDTH = len(CUSTOM_TERRAIN) if CUSTOM_TERRAIN else 20
+TERRAIN_WIDTH = len(CUSTOM_TERRAIN) if CUSTOM_TERRAIN else 30
 
 scene = Scene((TERRAIN_WIDTH+1,6), is_main_scene=True, clear_char=" ")
-scene.use_seperator = False
 
 walls = []
 wall_heights = CUSTOM_TERRAIN if CUSTOM_TERRAIN else [random.randint(1,5) for _ in range(1,TERRAIN_WIDTH)]

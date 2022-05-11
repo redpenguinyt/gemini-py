@@ -149,7 +149,7 @@ class Scene:
 		self.size = size
 		self.clear_char = clear_char
 		self.bg_colour = bg_colour
-		self.children = []
+		self.children: list[Entity] = []
 
 		if is_main_scene:
 			main_scene.main_scene = self
@@ -183,13 +183,12 @@ class Scene:
 					print(f"yooo: {i}, {n}")
 					entity_image[i] += "​"*n # Add zero width spaces
 				entity_image = '\n'.join(entity_image)
-				print(entity_image)
-				extra_length = max(entity.extra_characters)
+				extra_length = max(entity.extra_characters) if entity.extra_characters else 0
+
 			for x in range(entity.size[0]+extra_length):
 				for y in range(entity.size[1]):
 					if isinstance(entity, Sprite):
 						try:
-							print(__import__('json').dumps(entity_image))
 							pixel = entity_image.split("\n")[y][x]
 						except:
 							pixel = " "
