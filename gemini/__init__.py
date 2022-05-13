@@ -22,27 +22,36 @@ class Entity:
 	@property
 	def parent(self):
 		return self._parent
-
 	@parent.setter
 	def parent(self, value: 'Scene'):
 		if value == None:
 			self._parent.children.remove(self)
 		self._parent = value
 
-	def __init__(self, pos: tuple, size: tuple, parent: 'Scene'=None, auto_render=False, layer=0, fill_char="█", colour="", collisions: list|bool=[]):
+	@property
+	def fill_char(self):
+		return self._fill_char if not self.hidden else self.parent.get_background()
+	@fill_char.setter
+	def fill_char(self, value: str):
+		self._fill_char = value
+
+	def __init__(self, pos: tuple, size: tuple, parent: 'Scene'=None, auto_render=False, layer=0, fill_char="█", colour="", collisions: list|bool=[], hidden=False):
 		self.pos, self.size = pos, size
-		self.fill_char = fill_char
-		self.old_fill_char = self.fill_char
+		self._fill_char = fill_char
 		self.colour = colour
 		self.auto_render = auto_render
 		self.layer = layer
-		self.collisions = [-1] if collisions == True else [] if type(collisions) == bool else collisions
+		self.collisions = [-1] if collisions == True else [] if type(collisions) == False else collisions
+		self.hidden = hidden
 
 		if not parent and main_scene.main_scene:
 			parent = main_scene.main_scene
 		self._parent = parent
 		if parent:
 			parent.add_to_scene(self)
+
+	def __str__(self):
+		return f"Entity(pos={self.pos},size={self.size},fill_char='{self._fill_char}',parent={self.parent})"
 
 	def move(self, x: int | tuple, y: int=None, collide: bool=None, render: bool=None):
 		"""Move the Entity within the scene. `+x` is right and `+y` is down. By enabling the Entity's auto_render property, calling this function will automatically render the scene that this Entity belongs to. If your scene is stuttering while animating, make sure you're only rendering the scene once per frame.
@@ -90,9 +99,11 @@ class Entity:
 		return 1 if has_collided else 0
 
 	def show(self):
-		self.fill_char = self.old_fill_char
+		"""Make the sprite shown"""
+		self.hidden = False
 	def hide(self):
-		self.fill_char = self.parent.get_background()
+		"""Make the sprite hidden"""
+		self.hidden = True
 
 class Sprite(Entity):
 	"""## Sprite
@@ -110,26 +121,34 @@ class Sprite(Entity):
 	In the event that a single character takes up two spaces (e.g. ¯\_(ツ)_/¯), you can use the extra_characters parameter, with each index of the list corresponding to the line with the extra character. For instance with a sprite with the image `¯\_(ツ)_/¯`, you would set `extra_characters=[1]`
 	"""
 
-	def __init__(self, pos: tuple, image: str, transparent: bool=True, parent: 'Scene'=None, auto_render=False, layer=0, colour: str="", collisions: list=[], extra_characters: list=[]):
+	@property
+	def image(self):
+		"""This will return nothing if the sprite is hidden, to always get the raw image"""
+		return self._image if not self.hidden else " \n"*self.size[1]
+	@image.setter
+	def image(self, value: str):
+		self._image = value
+
+	def __init__(self, pos: tuple, image: str, transparent: bool=True, parent: 'Scene'=None, auto_render=False, layer=0, colour: str="", collisions: list=[], hidden=False, extra_characters: list=[]):
 		self.old_image = image
-		self.image = image
+		self._image = image
 		self.transparent = transparent
 		self.extra_characters = extra_characters
 
 		size = (len(max(image.split("\n"))), image.count("\n") + 1)
 
-		super().__init__(pos, size, parent, auto_render, layer, "", colour, collisions)
-		del self.fill_char
-		del self.old_fill_char
+		super().__init__(pos, size, parent, auto_render, layer, "", colour, collisions, hidden)
+		del self._fill_char
 
 	def __str__(self):
-		return f"Scene(size={self.size},clear_char='{self.clear_char}',bg_colour='{self.bg_colour}',is_main_scene={self == main_scene.main_scene})"
+		return f"Sprite(pos={self.pos},size={self.size},image='{self._image[:10]}{'...' if len(self._image) > 10 else ''}',parent={self.parent})"
 
 	def show(self):
-		self.image = self.old_image
-
+		"""Make the sprite shown"""
+		self.hidden = False
 	def hide(self):
-		self.image = " \n"*self.size[1]
+		"""Make the sprite hidden"""
+		self.hidden = True
 
 class Scene:
 	"""## Scene
@@ -180,7 +199,6 @@ class Scene:
 			if isinstance(entity, Sprite):
 				entity_image = entity.image.split("\n")
 				for i, n in enumerate(entity.extra_characters):
-					print(f"yooo: {i}, {n}")
 					entity_image[i] += "​"*n # Add zero width spaces
 				entity_image = '\n'.join(entity_image)
 				extra_length = max(entity.extra_characters) if entity.extra_characters else 0
