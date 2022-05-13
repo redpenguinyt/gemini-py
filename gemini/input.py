@@ -51,6 +51,3 @@ class Input:
 		finally:
 			termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
 			fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
-
-def __init__():
-	return Input()

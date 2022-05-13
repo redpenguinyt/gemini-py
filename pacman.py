@@ -25,8 +25,8 @@ pacman_board = """
 ghost_spawn_point = (8,8)
 
 scene = Scene((17,19),clear_char=".", is_main_scene=True)
-walls = Sprite((0,-1),image=pacman_board, colour=tc.BLUE)
-pacman = Sprite((8,12), "O", colour=tc.YELLOW, collisions=True)
+walls = Sprite((0,-1),image=pacman_board, colour=tc.BLUE, layer=3)
+pacman = Sprite((8,12), "O", colour=tc.YELLOW, collisions=[3])
 
 scene.render()
 
