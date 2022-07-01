@@ -159,8 +159,8 @@ class txtcolours:
 
 	Important note: for windows users please use colorama, as `txtcolours` only works with ANSI terminals. You can use `colorama.Fore.RED` instead of `txtcolours.RED`!"""
 
-	def txt_mod(num):
-		return f'\x1b[{num}m'
+	def txt_mod(self):
+		return f'\x1b[{self}m'
 
 	END = txt_mod(0)
 	BOLD = txt_mod(1)
