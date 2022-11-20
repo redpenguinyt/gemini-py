@@ -228,12 +228,12 @@ class txtcolours:
 
 	Important note: for windows users please use colorama, as `txtcolours` only works with ANSI terminals. You can use `colorama.Fore.RED` instead of `txtcolours.RED`!"""
 
-	def txt_mod(num):
-		return f'\x1b[{num}m'
-	def custom_fore(r:int,g:int,b:int):
-		return f'\x1b[38;2;{int(r)};{int(g)};{int(b)}m'
-	def custom_back(r:int,g:int,b:int):
-		return f'\x1b[48;2;{int(r)};{int(g)};{int(b)}m'
+	def txt_mod(self):
+		return f'\x1b[{self}m'
+	def custom_fore(self, g:int, b:int):
+		return f'\x1b[38;2;{int(self)};{g};{b}m'
+	def custom_back(self, g:int, b:int):
+		return f'\x1b[48;2;{int(self)};{g};{b}m'
 
 	END = txt_mod(0)
 	BOLD = txt_mod(1)
