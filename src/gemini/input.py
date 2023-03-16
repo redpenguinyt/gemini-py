@@ -38,15 +38,13 @@ class Input:
 		return key
 
 	def get_key_press(self, is_wait=True) -> str:
-		if os.name == "nt":
-			from msvcrt import getch
-			if is_wait:
-				while True:
-					if c := getch():
-						return self.string_key(c)
-			else:
-				c = getch()
+		if sys.platform.startswith('win'):
+			from msvcrt import getch, kbhit
+			if is_wait: # `or key_just_pressed` non-blocking currently does not work
+				c = getch()[1:]
 				return self.string_key(c)
+			else:
+				print("Non-blocking Windows input is currently unsupported, please use a third-party library until the issue is solved")
 		else:
 			import termios, fcntl
 			fd = sys.stdin.fileno()
