@@ -322,11 +322,11 @@ class AnimatedSprite(Sprite):
 		self._current_frame = value % len(self.frames)
 		self.image = self.frames[self._current_frame]
 
-	def __init__(self, pos: Vec2D, frames: list, *args, **kwargs):
+	def __init__(self, pos: Vec2D, frames: list, **kwargs):
 		self.frames = [frame.strip("\n") for frame in frames]
 		self._current_frame = 0
 
-		super().__init__(pos, frames[0], *args, **kwargs)
+		super().__init__(pos, frames[0], **kwargs)
 
 	def __str__(self):
 		return f"AnimatedSprite(pos={self.pos},frames='{str(self.frames)[:20]}')"
