@@ -33,7 +33,7 @@ class Axis(enum.Enum):
 	X = 0
 	Y = 1
 
-	def vector(self, value, seconday_value=0) -> tuple: # My dad helped me with this :D
+	def vector(self, value, seconday_value=0): # My dad helped me with this :D
 		"""Useful for movements in single directions"""
 		match self:
 			case Axis.X:

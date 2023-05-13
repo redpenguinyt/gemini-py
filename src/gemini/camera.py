@@ -20,8 +20,8 @@ class Camera:
 
 	# @utils.force_types(skip=1)
 	def __init__(self, pos: utils.Vec2D, size: utils.Vec2D, focus_object=None, scene=None):
-		self.pos = pos
-		self.size = size
+		self.pos = utils.Vec2D(pos)
+		self.size = utils.Vec2D(size)
 		self.focus_object = focus_object
 
 		if not scene:

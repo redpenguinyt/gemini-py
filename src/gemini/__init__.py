@@ -4,6 +4,8 @@ from .input import Input
 from .camera import Camera
 from . import utils
 
+_has_prepared_terminal = False
+
 # -- Entities --
 
 class RawEntity:
@@ -47,7 +49,7 @@ class RawEntity:
 
 class Entity(RawEntity):
 	"""## Entity
-	The Entity is the most basic object in a Gemini Scene. It is simply a rectangle of your chosen proportions. You can create a new entity like so.
+	The Entity is the most basic usable object in a Gemini Scene. It is simply a rectangle of your chosen proportions. You can create a new entity like so.
 
 	>>> from gemini import Scene, Entity
 	>>> new_scene = Scene((30,15))
@@ -68,8 +70,8 @@ class Entity(RawEntity):
 	def all_positions(self):
 		return [((self.pos + (i,j)) % self.parent.size) for i in range(self.size[0]) for j in range(self.size[1])]
 
-	def __init__(self, pos: Vec2D, size: Vec2D, parent: 'Scene'=None, auto_render:bool=False, layer: int=0, fill_char:str="█", colour:str="", collisions: list[int]|bool=[], visible:bool=True, move_functions: list=[]):
-		super().__init__(pos, parent, layer, colour, visible)
+	def __init__(self, pos: Vec2D, size: Vec2D, *, parent: 'Scene'=None, auto_render:bool=False, layer: int=0, fill_char:str="█", colour:str="", collisions: list[int]|bool=[], visible:bool=True, move_functions: list=[]):
+		super().__init__(pos, parent=parent, layer=layer, colour=colour, visible=visible)
 
 		self.size, self.fill_char = Vec2D(size), fill_char
 		self.auto_render= auto_render
@@ -80,7 +82,7 @@ class Entity(RawEntity):
 		return f"Entity(pos={self.pos},size={self.size},fill_char='{self._fill_char}')"
 
 	def move(self, x:int|tuple, y:int=None, collide: bool=None, run_functions=True, render: bool=None):
-		"""Move the Entity within the scene. `+x` is right and `+y` is down. By enabling the Entity's auto_render property, calling this function will automatically render the scene that this Entity belongs to. If your scene is stuttering while animating, make sure you're only rendering the scene once per frame.
+		"""Move the Entity within the scene. `+x` is right and `+y` is down. By setting `RawEntity.auto_render=True`, calling this function will automatically render the scene that this Entity belongs to. If your scene is stuttering while animating, make sure you're only rendering the scene once per frame.
 
 		When collisions are on, the entity will collide with anything that isnt the background"""
 		if render is None:
@@ -136,10 +138,10 @@ class Point(Entity):
 
 	@property
 	def all_positions(self):
-		return [self.pos]
+		return [Vec2D(self.pos)]
 
-	def __init__(self, pos: Vec2D, *args, **kwargs):
-		super().__init__(pos, (1,1), *args, **kwargs)
+	def __init__(self, pos: Vec2D, **kwargs):
+		super().__init__(pos, (1,1), **kwargs)
 
 	def __str__(self):
 		return f"Point(pos={self.pos},fill_char='{self._fill_char}')"
@@ -188,8 +190,8 @@ class Line(RawEntity):
 
 		return positions
 
-	def __init__(self, pos0: Vec2D, pos1: Vec2D, parent: 'Scene' = None, layer: int = 0, fill_char: str = "█", colour: str = "", visible: bool = True):
-		super().__init__(pos0, parent, layer, colour, visible)
+	def __init__(self, pos0: Vec2D, pos1: Vec2D, *, parent: 'Scene' = None, layer: int = 0, fill_char: str = "█", colour: str = "", visible: bool = True):
+		super().__init__(pos0, parent=parent, layer=layer, colour=colour, visible=visible)
 		self.fill_char = fill_char
 		self.pos0 = pos0
 		self.pos1 = pos1
@@ -230,10 +232,10 @@ class Polygon(RawEntity):
 			positions = list(filter(is_inside, positions))
 		return positions
 
-	def __init__(self,vertices:list[Vec2D],parent:'Scene'=None,layer:int=0,fill_char:str="█",colour:str="",visible:bool=True):
+	def __init__(self,vertices:list[Vec2D], *, parent:'Scene'=None,layer:int=0,fill_char:str="█",colour:str="",visible:bool=True):
 		self.vertices = vertices
 		self.fill_char = fill_char
-		super().__init__(self.vertices[0], parent, layer, colour, visible)
+		super().__init__(self.vertices[0], parent=parent, layer=layer, colour=colour, visible=visible)
 
 	def get_pixel(self, _):
 		return self.fill_char
@@ -283,8 +285,8 @@ class Sprite(Entity):
 			if self.get_pixel(pos) != " " or not self.transparent
 		]
 
-	def __init__(self, pos: Vec2D, image: str, transparent: bool=True, extra_characters: list=[], *args, **kwargs):
-		super().__init__(pos, (0,0), *args, **kwargs) # dummy size parameter
+	def __init__(self, pos: Vec2D, image: str, *, transparent: bool=True, extra_characters: list=[], **kwargs):
+		super().__init__(pos, (0,0), **kwargs) # dummy size parameter
 		self.transparent = transparent
 		self.extra_characters = extra_characters
 		self.image = image.strip("\n")
@@ -296,7 +298,7 @@ class Sprite(Entity):
 	def get_pixel(self, pos: Vec2D) -> str:
 		try:
 			return self.render_image.split("\n")[pos[1]][pos[0]]
-		except Exception:
+		except:
 			return " "
 
 class AnimatedSprite(Sprite):
@@ -343,7 +345,7 @@ class Scene:
 	>>> from gemini import Scene
 	>>> new_scene = Scene((30,15))
 
-	The width and height parameters are required and define the size of the rendered scene. To set the scene size to be the current terminal size, by using `os.get_terminal_size()`
+	The size property is required and defines the size of the rendered scene. To set the scene size to be the current terminal size, by using `os.get_terminal_size()`
 
 	Using is_main_scene=True is the same as
 	>>> from gemini import Scene, set_main_scene
@@ -357,10 +359,7 @@ class Scene:
 
 	@property
 	def origin(self):
-		"""Set where the centre of the screen should be. Can be a Vec2D or a string with one of the following options:
-		- "topleft"
-		- "centre"
-		"""
+		"""Set where the centre of the screen should be. Can be a Vec2D or a string of either `topleft` or `centre`"""
 		return Vec2D(eval(str(self._origin), {"topleft": (0,0), "centre": self.size/2}))
 
 	@origin.setter
@@ -379,12 +378,12 @@ class Scene:
 		"""Return the background character with colours included"""
 		return f"{self.bg_colour}{self.clear_char}{txtcolours.END if self.bg_colour != '' else ''}"
 
-	def __init__(self, size: Vec2D, clear_char="░", bg_colour="", children: list[RawEntity]=[], render_functions: list=None, is_main_scene=False, origin="topleft"):
+	def __init__(self, size: Vec2D, *, clear_char="░", bg_colour="", children: list[RawEntity]=[], render_functions: list=None, is_main_scene=False, origin="topleft"):
 		self.size = Vec2D(size)
 		self.clear_char = clear_char
 		self.bg_colour = bg_colour
 		self.children: list[RawEntity] = []
-		self.render_functions: list[function] = render_functions if render_functions != None else [self.clear_points]
+		self.render_functions: list[function] = render_functions if render_functions != None else []
 		self.origin = origin
 
 		if is_main_scene:
@@ -402,7 +401,7 @@ class Scene:
 		new_entity._parent = self
 
 	def clear_points(self):
-		"""Remove all `Point` objects"""
+		"""Helper function to remove all `Point` objects. This can be added to `Scene.render_functions` to automatically clear all created Points after calling `Scene.render`"""
 		for point in filter(lambda x: isinstance(x, Point), self.children[:]):
 			point.parent = None
 
@@ -413,6 +412,11 @@ class Scene:
 
 	def _render_stage(self, stage: list[list], show_coord_numbers=False, use_rewrite=True, use_clear=False, starting_coords=(0,0)):
 		"""Return a baked scene, ready for printing. This will take your grid of strings and render it. You can also set `show_coord_numbers=True` to print your scene with coordinate numbers for debugging purposes"""
+
+		global _has_prepared_terminal
+		if not _has_prepared_terminal:
+			_has_prepared_terminal = True
+			print("\n" * (os.get_terminal_size().lines))
 
 		if show_coord_numbers:
 			for i, c in enumerate(stage, starting_coords[1]):
@@ -435,6 +439,8 @@ class Scene:
 		For debugging, you can set `show_coord_numbers=True` to more see coordinate numbers around the border of your rendered scene. These numbers will not show in the render function's raw output regardless
 
 		`reprint_render` determines if the render will replace the old render or simply print after it. The latter will allow you to scroll up and see your screen history
+
+		`Scene.debug_display` is an easy to use text element to display information such as FPS or object counts
 		"""
 
 		stage = [[self.background_tile] * self.size[0] for _ in range(self.size[1])] # Create the render 'stage'
@@ -468,8 +474,10 @@ class Scene:
 		"""Check for any object at a specific position, can be sorted by layers. `-1` in the layers list means to collide with all layers. entities in the `exclude` list parameter will be ignored"""
 		return len(list(filter(lambda x: x not in exclude, self.get_entities_at(pos, layers)))) > 0
 
-	def get_entities_at(self, pos: Vec2D, layers: list[int]=[]) -> list[Entity]:
+	def get_entities_at(self, pos: Vec2D, layers: list[int]=[]) -> list[RawEntity]:
 		"""Return all entities found at the chosen position, can be filtered by layer"""
+		pos = Vec2D(pos)
+
 		layers = layers if isinstance(layers, list) else [layers]
 		layers = layers if layers != [-1] else []
 		entities: list[Entity] = list(filter(lambda x: x.layer in layers, self.children)) if layers else self.children
