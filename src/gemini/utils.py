@@ -145,14 +145,14 @@ class Vec2D:
 		)))
 	def __eq__(self, value: 'Vec2D') -> bool:
 		return self.__repr__() == Vec2D(value).__repr__()
-	def __gt__(self, value: 'Vec2D') -> bool:
-		return self.x > Vec2D(value).x or self.y > Vec2D(value).y
-	def __lt__(self, value: 'Vec2D') -> bool:
-		return self.x < Vec2D(value).x or self.y < Vec2D(value).y
-	def __ge__(self, value: 'Vec2D') -> bool:
-		return self.x >= Vec2D(value).x or self.y >= Vec2D(value).y
-	def __le__(self, value: 'Vec2D') -> bool:
-		return self.x <= Vec2D(value).x or self.y <= Vec2D(value).y
+	def __gt__(self, value: 'Vec2D') -> tuple[bool, bool]:
+		return (self.x > Vec2D(value).x, self.y > Vec2D(value).y)
+	def __lt__(self, value: 'Vec2D') -> tuple[bool, bool]:
+		return (self.x < Vec2D(value).x, self.y < Vec2D(value).y)
+	def __ge__(self, value: 'Vec2D') -> tuple[bool, bool]:
+		return (self.x >= Vec2D(value).x, self.y >= Vec2D(value).y)
+	def __le__(self, value: 'Vec2D') -> tuple[bool, bool]:
+		return (self.x <= Vec2D(value).x, self.y <= Vec2D(value).y)
 
 class Vec2DFloat(Vec2D):
 	"""Helper class for positions and sizes. A set of two floats. Can be initalised with `Vec2DFloat(5.5,4.2)` or with `Vec2DFloat([5.5,4.2])` Can also just be a replacement for `tuple[float,float]`
