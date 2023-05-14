@@ -483,6 +483,3 @@ class Scene:
 		entities: list[Entity] = list(filter(lambda x: x.layer in layers, self.children)) if layers else self.children
 
 		return list(filter(lambda x: pos in x.all_positions, entities))
-
-# prepares for the first render
-print("\n" * (os.get_terminal_size().lines))
